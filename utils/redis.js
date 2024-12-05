@@ -8,11 +8,15 @@ class RedisClient {
     this.client.on('error', (err) => {
         console.log(err)
     });
+
   }
 
   // ES6 way of creating function
   isAlive() {
-    return this.client.connected;
+    if (this.client.connected) {
+      return true;
+    }
+    return false;
   }
 
   async get(key) {
@@ -23,7 +27,7 @@ class RedisClient {
 
   async set(key, value, duration) {
     const setexAsync = promisify(this.client.setex).bind(this.client)
-    await setexAsync(key, duration, value)
+    setexAsync(key, duration, value)
   }
 
   async del(key) {
