@@ -6,7 +6,7 @@ class DBClient {
     this.port = process.env.DB_PORT || '27017';
     this.database = process.env.DB_DATABASE || 'file_manager';
 
-    this.client = new MongoClient(`mongodb://${this.host}:${this.port}`);
+    this.client = new MongoClient(`mongodb://${this.host}:${this.port}`, { useUnifiedTopology: true });
 
     // mongodb connection
     this.client.connect()
