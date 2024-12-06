@@ -1,0 +1,39 @@
+import { MongoClient } from 'mongodb';
+
+class DBClient {
+  constructor() {
+    this.host = process.env.DB_HOST || 'localhost';
+    this.port = process.env.DB_PORT || '27017';
+    this.database = process.env.DB_DATABASE || 'file_manager';
+
+    this.client = new MongoClient(`mongodb://${this.host}:${this.port}`);
+
+    // mongodb connection
+    this.client.connect()
+      .then(() => {
+        this.db = this.client.db(this.database);
+        this.userCollection = this.db.collection('user');
+        this.fileCollection = this.db.collection('files');
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
+  isAlive() {
+    return this.client.isConnected();
+  }
+
+  async nbUsers() {
+    const nbuser = await this.userCollection.countDocuments();
+    return nbuser;
+  }
+
+  async nbFiles() {
+    const nbfiles = await this.fileCollection.countDocuments();
+    return nbfiles;
+  }
+}
+
+const dbClient = new DBClient();
+module.exports = dbClient;
