@@ -9,6 +9,9 @@ class RedisClient {
         console.log(err)
     });
 
+    this.getAsync = promisify(this.client.get).bind(this.client)
+    this.setexAsync = promisify(this.client.setex).bind(this.client)
+    this.delAsync = promisify(this.client.del).bind(this.client)
   }
 
   // ES6 way of creating function
@@ -20,19 +23,15 @@ class RedisClient {
   }
 
   async get(key) {
-    const getAsync = promisify(this.client.get).bind(this.client)
-    const reply = await getAsync(key)
-    return reply;
+    return await this.getAsync(key)
   }
 
   async set(key, value, duration) {
-    const setexAsync = promisify(this.client.setex).bind(this.client)
-    setexAsync(key, duration, value)
+    await this.setexAsync(key, duration, value)
   }
 
   async del(key) {
-    const delAsync = promisify(this.client.del).bind(this.client)
-    await delAsync(key)
+    await this.delAsync(key)
   }
 
 }
