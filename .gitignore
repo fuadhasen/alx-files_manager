@@ -2,5 +2,8 @@ node_modules
 .eslintrc
 package.json
 package-lock.json
-babel.config.json
+babel.config.js
 dump.rdb
+.eslintrc.js
+main.js
+
