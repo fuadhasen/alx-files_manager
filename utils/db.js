@@ -6,7 +6,7 @@ class DBClient {
     this.port = process.env.DB_PORT || '27017';
     this.database = process.env.DB_DATABASE || 'file_manager';
 
-    this.client = new MongoClient(`mongodb://${this.host}:${this.port}`, { useUnifiedTopology: true });
+    this.client = new MongoClient(`mongodb://${this.host}:${this.port}`, { useUnifiedTopology: true, useNewUrlParser: true });
 
     // mongodb connection
     this.client.connect()
@@ -21,7 +21,7 @@ class DBClient {
   }
 
   isAlive() {
-    return this.client.isConnected();
+    return this.client.topology.isConnected();
   }
 
   async nbUsers() {
@@ -36,4 +36,4 @@ class DBClient {
 }
 
 const dbClient = new DBClient();
-module.exports = dbClient;
+export default dbClient
