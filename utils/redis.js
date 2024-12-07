@@ -1,17 +1,17 @@
 import { createClient } from 'redis';
-const { promisify } = require('util');
 
+const { promisify } = require('util');
 
 class RedisClient {
   constructor() {
-    this.client  = createClient();
+    this.client = createClient();
     this.client.on('error', (err) => {
-        console.log(err)
+      console.log(err);
     });
 
-    this.getAsync = promisify(this.client.get).bind(this.client)
-    this.setexAsync = promisify(this.client.setex).bind(this.client)
-    this.delAsync = promisify(this.client.del).bind(this.client)
+    this.getAsync = promisify(this.client.get).bind(this.client);
+    this.setexAsync = promisify(this.client.setex).bind(this.client);
+    this.delAsync = promisify(this.client.del).bind(this.client);
   }
 
   // ES6 way of creating function
@@ -23,7 +23,7 @@ class RedisClient {
   }
 
   async get(key) {
-    const reply = await this.getAsync(key)
+    const reply = await this.getAsync(key);
     return reply;
   }
 
@@ -34,8 +34,7 @@ class RedisClient {
   async del(key) {
     await this.delAsync(key);
   }
-
 }
 
-const redisClient = new RedisClient()
-module.exports = redisClient;
+const redisClient = new RedisClient();
+export default redisClient;
