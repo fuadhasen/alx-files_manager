@@ -6,19 +6,20 @@ class UserController {
     const { email } = req.body;
     const pwd = req.body.password;
     if (!email) {
-      res.status(400).send('Missing email');
+      res.status(400).json({"error": "Missing email"});
       return;
     }
 
     if (!pwd) {
-      res.status(400).send('Missing password');
+      res.status(400).json({"error": "Missing password"});
       return;
     }
 
     const users = dbClient.userCollection;
     users.findOne({ email }, (err, document) => {
       if (document) {
-        res.status(400).send('Already exist');
+        res.status(400).json({"error": 'Already exist'});
+        return;
       }
     });
 
