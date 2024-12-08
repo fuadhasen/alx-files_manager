@@ -10,7 +10,7 @@ class RedisClient {
     });
 
     this.getAsync = promisify(this.client.get).bind(this.client);
-    this.setexAsync = promisify(this.client.setex).bind(this.client);
+    this.setAsync = promisify(this.client.set).bind(this.client);
     this.delAsync = promisify(this.client.del).bind(this.client);
   }
 
@@ -28,7 +28,7 @@ class RedisClient {
   }
 
   async set(key, value, duration) {
-    await this.setexAsync(key, duration, value);
+    await this.setAsync(key, value, 'EX', duration);
   }
 
   async del(key) {
