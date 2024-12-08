@@ -21,30 +21,45 @@ class AuthController {
     hashed.update(password);
     const hashedPwd = hashed.digest('hex');
 
-    users.findOne({ "email": email, "password": hashedPwd }, (err, document) => {
+    users.findOne({ "email": email, "password": hashedPwd },  (err, document) => {
       if (!document) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
-
       const token = uuidv4();
-      redisClient.setAsync(`auth_${token}`, document.id, 'EX', 24 * 3600)
-        .then(() => {
-          return res.status(200).json({ "token": token });
-        });
+      const duration = 24 * 3600;
+
+      const documentId = document._id.toString()
+      redisClient.set(`auth_${token}`, documentId, duration)
+      .then(() => {
+        return res.status(200).json({ "token": token });
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+
     });
   }
 
   static getDisconnect(req, res) {
-    const token = req.headers['X-Token'];
+    const token = req.headers['x-token'];
     redisClient.get(`auth_${token}`)
-      .then((error, reply) => {
-        if (error) {
-          return res.status(401).json({ error: 'Unauthorized' });
-        }
-      });
+    .then((reply) => {
+      if (!reply) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    })
 
-    redisClient.del(`auth_${token}`);
-    return res.status(204);
+    redisClient.del(`auth_${token}`)
+    .then(() => {
+      return res.status(204).send();
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+  
   }
 }
 

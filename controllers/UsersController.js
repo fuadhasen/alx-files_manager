@@ -2,6 +2,9 @@ import crypto from 'crypto';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
+const { ObjectId } = require('mongodb')
+
+
 class UserController {
   static postNew(req, res) {
     const { email } = req.body;
@@ -32,18 +35,21 @@ class UserController {
 
   static getMe(req, res) {
     const user = dbClient.userCollection
-    const token = req.headers['X-Token']
+    const token = req.headers['x-token']
 
-    redisClient.get(`auth_${token}`).then((doc_id) => {
-      console.log(doc_id)
+    redisClient.get(`auth_${token}`)
+    .then((doc_id) => {
       if (!doc_id) {
         return res.status(401).json({"error": 'Unauthorized'});
       }
 
-      user.findOne({"id": doc_id}, (error, document) => {
+      user.findOne({"_id": ObjectId(doc_id)}, (error, document) => {
         return res.status(401).json({"id": doc_id, "email": document.email})
       })
     })
+    .catch((err) => [
+      console.log(err)
+    ])
   }
 }
 
