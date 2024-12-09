@@ -47,9 +47,9 @@ class UserController {
         return res.status(401).json({"id": doc_id, "email": document.email})
       })
     })
-    .catch((err) => [
+    .catch((err) => {
       console.log(err)
-    ])
+   })
   }
 }
 

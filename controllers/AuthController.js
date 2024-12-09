@@ -13,7 +13,6 @@ class AuthController {
 
     const decodedstr = Buffer.from(credential, 'base64').toString('utf-8');
     const str = decodedstr.split(':');
-    console.log(str);
     const email = str[0];
     const password = str[1];
 
