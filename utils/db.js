@@ -12,7 +12,7 @@ class DBClient {
     this.client.connect()
       .then(() => {
         this.db = this.client.db(this.database);
-        this.userCollection = this.db.collection('user');
+        this.userCollection = this.db.collection('users');
         this.fileCollection = this.db.collection('files');
       })
       .catch((error) => {
