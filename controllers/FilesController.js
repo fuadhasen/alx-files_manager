@@ -1,4 +1,5 @@
 const fs = require('fs');
+const mime = require('mime-types');
 const path = require('path');
 const {ObjectId} = require('mongodb')
 
@@ -229,22 +230,67 @@ class FilesController {
         }
 
         // update the specified document and return new document
-        file.findOneAndUpdate(
+        file.updateOne(
           {"_id": ObjectId(file_id)},
           {$set: {isPublic: false}},
-          {new: true},
-          (err, newDocument) => {
-            const response = {
-              id: newDocument.value._id.toString(),
-              userId: newDocument.value.userId,
-              name: newDocument.value.name,
-              type: newDocument.value.type,
-              isPublic: newDocument.value.isPublic,
-              parentId: newDocument.value.parentId
-            }
-            return res.status(400).json(response); 
-          }
         )
+
+        file.findOne({"_id": ObjectId(file_id)}, (error, document) => {
+          const response = {
+            id: document._id.toString(),
+            userId: document.userId,
+            name: document.name,
+            type: document.type,
+            isPublic: document.isPublic,
+            parentId: document.parentId
+          }
+          return res.status(400).json(response); 
+        })
+      })
+    })
+
+  }
+
+  static getFile(req, res) {
+    const token = req.headers['x-token']
+    const file = dbClient.fileCollection;
+
+    redisClient.get(`auth_${token}`)
+    .then((user_id) => {
+      // Authentication with token
+      const file_id = req.params.id;
+
+      file.findOne({"_id": ObjectId(file_id)}, (error, document) => {
+        if (!document) {
+          console.log('ere ezi negn')
+          return res.status(404).json({"error": "Not found"});
+        }
+
+        // if public no authentication otherwise it needs authentication to serve file
+        if (!document.isPublic) {
+          if (!user_id || user_id != document.userId) {
+            console.log(user_id)
+            console.log(document.userId);
+            return res.status(404).json({"error": 'Not found'});
+          }
+        }
+
+        if (document.type == 'folder') {
+          return res.status(400).json({"error": "A folder doesn\'t have content"});
+        }
+        const resolvedPath = path.resolve(document.localPath)
+        console.log(resolvedPath)
+        console.log(document.localPath);
+        if (!fs.existsSync(resolvedPath)) {
+          console.log('ayi ezi eko negn')
+          return res.status(404).json({"error": "Not found"})
+        }
+
+        const mimeType = mime.lookup(document.name);
+        res.setHeaders('content-Type', mimeType);
+        fs.readFile((document.localPath), (err, content) => {
+          return res.send(content)
+        })
       })
     })
 
