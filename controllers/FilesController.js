@@ -152,7 +152,6 @@ class FilesController {
         })
 
       } else {
-        console.log(parentId)
         file.findOne({"parentId": String(parentId)}, (error, document) => {
           console.log(document);
           if (!document) {
