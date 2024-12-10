@@ -171,6 +171,84 @@ class FilesController {
       }
     })
   }
+
+  static putPublish(req, res) {
+    const token = req.headers['x-token']
+    const file = dbClient.fileCollection;
+
+    redisClient.get(`auth_${token}`)
+    .then((user_id) => {
+      // Authentication with token
+      if (!user_id) {
+        return res.status(401).json({"error": 'Unauthorized'});
+      }
+      const file_id = req.params.id;
+
+      file.findOne({"_id": ObjectId(file_id)}, (error, document) => {
+        if (!document) {
+          return res.status(404).json({"error": "Not found"});
+        }
+
+        // update the specified document
+        file.updateOne(
+          {"_id": ObjectId(file_id)},
+          {$set: {isPublic: true}},
+        )
+
+        file.findOne({"_id": ObjectId(file_id)}, (error, document) => {
+          const response = {
+            id: document._id.toString(),
+            userId: document.userId,
+            name: document.name,
+            type: document.type,
+            isPublic: document.isPublic,
+            parentId: document.parentId
+          }
+          return res.status(400).json(response); 
+        })
+
+      })
+    })
+  }
+
+  static putUnpublish(req, res) {
+    const token = req.headers['x-token']
+    const file = dbClient.fileCollection;
+
+    redisClient.get(`auth_${token}`)
+    .then((user_id) => {
+      // Authentication with token
+      if (!user_id) {
+        return res.status(401).json({"error": 'Unauthorized'});
+      }
+      const file_id = req.params.id;
+
+      file.findOne({"_id": ObjectId(file_id)}, (error, document) => {
+        if (!document) {
+          return res.status(404).json({"error": "Not found"});
+        }
+
+        // update the specified document and return new document
+        file.findOneAndUpdate(
+          {"_id": ObjectId(file_id)},
+          {$set: {isPublic: false}},
+          {new: true},
+          (err, newDocument) => {
+            const response = {
+              id: newDocument.value._id.toString(),
+              userId: newDocument.value.userId,
+              name: newDocument.value.name,
+              type: newDocument.value.type,
+              isPublic: newDocument.value.isPublic,
+              parentId: newDocument.value.parentId
+            }
+            return res.status(400).json(response); 
+          }
+        )
+      })
+    })
+
+  }
 }
 
 export default FilesController;
