@@ -17,7 +17,6 @@ class FilesController {
     const folderPath = process.env.FOLDER_PATH || '/tmp/files_manager';
     let userId;
 
-
     redisClient.get(`auth_${token}`)
     .then((doc_id) => {
       if (!doc_id) {
@@ -93,6 +92,85 @@ class FilesController {
         })
       }
     }) 
+  }
+
+  static getShow(req, res) {
+    const token = req.headers['x-token']
+    const file = dbClient.fileCollection;
+
+    redisClient.get(`auth_${token}`)
+    .then((user_id) => {
+      if (!user_id) {
+        return res.status(401).json({"error": 'Unauthorized'});
+      }
+
+      const doc_id = req.params.id;
+      if (doc_id) {
+        file.findOne({"_id": ObjectId(doc_id)}, (error, document) => {
+          if (!document) {
+            return res.status(404).json({"error": "Not found"});
+          }
+          const response = {
+            id: document._id.toString(),
+            userId: document.userId,
+            name: document.name,
+            type: document.type,
+            isPublic: document.isPublic,
+            parentId: document.parentId
+          }
+          return res.status(400).json(response);
+        })
+      }
+    })
+  }
+
+  static getIndex(req, res) {
+    const token = req.headers['x-token']
+    const file = dbClient.fileCollection;
+
+    redisClient.get(`auth_${token}`)
+    .then((user_id) => {
+      if (!user_id) {
+        return res.status(401).json({"error": 'Unauthorized'});
+      }
+
+      const parentId = req.query.parentId;
+      if (!parentId) {
+        file.find({}).toArray((err, document) => {
+          console.log(document);
+          const result = document.map((item) => {
+            return {
+              id:  item._id.toString(),
+              userId: item.userId,
+              name: item.name,
+              type: item.type,
+              isPublic: item.isPublic,
+              parentId: item.parentId
+            }
+          })
+          return res.status(400).json(result)
+        })
+
+      } else {
+        console.log(parentId)
+        file.findOne({"parentId": String(parentId)}, (error, document) => {
+          console.log(document);
+          if (!document) {
+            // if not return empty list file parentId is => 0(root)
+            return res.status(404).send([])
+          }
+          const response = {
+            id: document._id.toString(),
+            userId: document.userId,
+            name: document.name,
+            type: document.type,
+            isPublic: document.isPublic,
+            parentId: document.parentId
+          }
+          return res.status(400).json(response);
+        })
+      }
+    })
   }
 }
 
