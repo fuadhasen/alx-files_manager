@@ -13,7 +13,7 @@ class FilesController {
     const acceptedType = ['folder', 'file', 'image']
     const file = dbClient.fileCollection;
     const token = req.headers['x-token']
-    const { name, type, parentId, isPublic, data } = req.body
+    const { name, type, data, parentId, isPublic } = req.body
     const folderPath = process.env.FOLDER_PATH || '/tmp/files_manager';
     let userId;
 
@@ -48,7 +48,7 @@ class FilesController {
           }
         })
       }
-  
+
       const newFile = {
         "userId": userId,
         "name": name,
@@ -56,43 +56,42 @@ class FilesController {
         "isPublic":isPublic ? isPublic : false,
         "parentId":parentId ? parentId: 0
       }
-  
+
       if (type === 'folder') {
         file.insertOne(newFile, (err, reply) => {
           const folderResponse = {
             ...newFile,
             id: reply.insertedId
           }
+          delete folderResponse._id;
           return res.status(201).json(folderResponse);
         });
-      }
-  
-  
-      const fileName = uuidv4();
-      const fullPath = path.join(folderPath, fileName);
-    
-      if (!fs.existsSync(folderPath)) {
-        fs.mkdirSync(folderPath)
-      }
-  
-      const content = Buffer.from(data, 'base64').toString('utf-8');
-      fs.writeFile(fullPath, content, (err) => {
-        if (err) {
-          console.log(err);
-
+      } else {  
+        const fileName = uuidv4();
+        const fullPath = path.join(folderPath, fileName);
+      
+        if (!fs.existsSync(folderPath)) {
+          fs.mkdirSync(folderPath)
         }
-        const newFile2 = {
-          ...newFile,
-          localPath: fullPath
-        }
-        file.insertOne(newFile2, (err, reply) => {
-          const fileResponse = {
-            ...newFile,
-            id: reply.insertedId
+        const cont = String(data);
+        const content = Buffer.from(String(data), 'base64').toString('utf-8');
+        fs.writeFile(fullPath, content, (err) => {
+          if (err) {
+            console.log(err);
           }
-          return res.status(201).json(fileResponse);
-        });
-      })
+          const newFile2 = {
+            ...newFile,
+            localPath: fullPath
+          }
+          file.insertOne(newFile2, (err, reply) => {
+            const fileResponse = {
+              ...newFile,
+              id: reply.insertedId
+            }
+            return res.status(201).json(fileResponse);
+          });
+        })
+      }
     }) 
   }
 }
