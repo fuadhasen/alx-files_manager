@@ -38,17 +38,18 @@ class UserController {
     const token = req.headers['x-token']
 
     redisClient.get(`auth_${token}`)
-    .then((doc_id) => {
-      if (!doc_id) {
+    .then((user_id) => {
+      if (!user_id) {
         return res.status(401).json({"error": 'Unauthorized'});
       }
 
-      user.findOne({"_id": ObjectId(doc_id)}, (error, document) => {
-        return res.status(401).json({"id": doc_id, "email": document.email})
+      // find user based on the token in the document
+      user.findOne({"userId": String(user_id)}, (error, document) => {
+        return res.status(401).json({"id": document.userId, "email": document.email})
       })
     })
     .catch((err) => {
-      console.log(err)
+      console.log(err);
    })
   }
 }
