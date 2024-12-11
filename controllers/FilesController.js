@@ -267,30 +267,29 @@ class FilesController {
         }
 
         // if public no authentication otherwise it needs authentication to serve file
-        if (!document.isPublic) {
-          if (!user_id || user_id != document.userId) {
-            console.log(user_id)
-            console.log(document.userId);
-            return res.status(404).json({"error": 'Not found'});
+        if (!document.isPublic && (!(user_id) || user_id != document.userId)) {
+          return res.status(404).json({"error": 'Not found'});
+        } else {
+
+          if (document.type == 'folder') {
+            return res.status(400).json({"error": "A folder doesn\'t have content"});
           }
-        }
 
-        if (document.type == 'folder') {
-          return res.status(400).json({"error": "A folder doesn\'t have content"});
-        }
-        const resolvedPath = path.resolve(document.localPath)
-        console.log(resolvedPath)
-        console.log(document.localPath);
-        if (!fs.existsSync(resolvedPath)) {
-          console.log('ayi ezi eko negn')
-          return res.status(404).json({"error": "Not found"})
-        }
+          const resolvedPath = path.resolve(document.localPath)
+          console.log(resolvedPath)
+          console.log(document.localPath);
+          if (!fs.existsSync(resolvedPath)) {
+            console.log('ayi ezi eko negn')
+            return res.status(404).json({"error": "Not found"})
+          }
+  
+          const mimeType = mime.lookup(document.name);
+          res.setHeader('content-Type', mimeType);
+          fs.readFile((document.localPath), (err, content) => {
+            return res.send(content)
+          })
 
-        const mimeType = mime.lookup(document.name);
-        res.setHeaders('content-Type', mimeType);
-        fs.readFile((document.localPath), (err, content) => {
-          return res.send(content)
-        })
+        } 
       })
     })
 
