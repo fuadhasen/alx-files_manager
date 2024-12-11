@@ -43,12 +43,13 @@ class UserController {
         return res.status(401).json({"error": 'Unauthorized'});
       }
 
+      // find user based on the token in the document
       user.findOne({"userId": String(user_id)}, (error, document) => {
         return res.status(401).json({"id": document.userId, "email": document.email})
       })
     })
     .catch((err) => {
-      console.log(err)
+      console.log(err);
    })
   }
 }
