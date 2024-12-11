@@ -44,8 +44,8 @@ class UserController {
       }
 
       // find user based on the token in the document
-      user.findOne({"userId": String(user_id)}, (error, document) => {
-        return res.status(401).json({"id": document.userId, "email": document.email})
+      user.findOne({"_id": ObjectId(user_id)}, (error, document) => {
+        return res.status(401).json({"id": document._id, "email": document.email})
       })
     })
     .catch((err) => {
