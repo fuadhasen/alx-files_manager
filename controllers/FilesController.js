@@ -2,6 +2,8 @@ const fs = require('fs');
 const mime = require('mime-types');
 const path = require('path');
 const {ObjectId} = require('mongodb')
+const Bull = require('bull');
+const fileQueue = new Bull('fileQueue');
 
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
@@ -73,7 +75,7 @@ class FilesController {
         if (!fs.existsSync(folderPath)) {
           fs.mkdirSync(folderPath)
         }
-        const cont = String(data);
+
         const content = Buffer.from(String(data), 'base64').toString('utf-8');
         fs.writeFile(fullPath, content, (err) => {
           if (err) {
@@ -88,7 +90,22 @@ class FilesController {
               ...newFile,
               id: reply.insertedId
             }
-            return res.status(201).json(fileResponse);
+            // add job to the queue when file type is image
+            if (newFile.type === 'image') {
+              fileQueue.add({
+                userId: newFile.userId,
+                fileId: reply.insertedId
+              })
+              .then(() => {
+                console.log('queue is successfully created')
+                return res.status(201).json(fileResponse);
+              })
+              .catch((err) => {
+                console.log(err);
+              })
+            } else {
+              return res.status(201).json(fileResponse);
+            }
           });
         })
       }
@@ -259,6 +276,7 @@ class FilesController {
     .then((user_id) => {
       // Authentication with token
       const file_id = req.params.id;
+      const size = req.query.size;
 
       file.findOne({"_id": ObjectId(file_id)}, (error, document) => {
         if (!document) {
